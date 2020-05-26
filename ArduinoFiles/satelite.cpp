@@ -14,10 +14,10 @@
 #include <Adafruit_BMP280.h>
 #include <Adafruit_Sensor.h> 
 
-dht DHT;//objeto dht (sensor humidade e temperatura)
-Adafruit_BMP280 sensor_bmp; // I2C
-TinyGPSPlus gps; //objeto gps
-SoftwareSerial gpsSerial(4, 5); //portas seriais do gps
+dht DHT;
+Adafruit_BMP280 sensor_bmp;
+TinyGPSPlus gps;
+SoftwareSerial gpsSerial(4, 5);
 
 void setup()
 {
@@ -27,27 +27,22 @@ void setup()
     Serial.println(F("não foi possível iniciar o BMP280!"));
   }               
 
-  //Define o pino 8 do Arduino como o pino de dados do transmissor
   vw_set_tx_pin(8);
-  vw_setup(2000);   // Bits per sec
+  vw_setup(2000);
   gpsSerial.begin(9600);
-  delay(2000); //INTERVALO DE 2 SEGUNDO ANTES DE INICIAR
+  delay(2000);
 }
  
 void loop()
 {
-  bool recebido = false; // Booleano auxiliador
-  char data[60]; // String de dados que serão enviadas via Rádio Frequência
-  DHT.read11(A2); //LÊ AS INFORMAÇÕES DO SENSOR DHT11
+  bool recebido = false;
+  char data[60];
+  DHT.read11(A2);
 
-  //concatena temperatura
   concatena(DHT.temperature,data,2,0);
-
-  //concatena umidade
   concatena(DHT.humidity,data,2,0);
 
   if (sensor_bmp.begin(0x76)) {
-    //concatena pressao
     concatena(sensor_bmp.readPressure(),data,2,1);
   }else{
     strcat(data, ";");
@@ -55,13 +50,15 @@ void loop()
 
   if(!recebido){
     if(sensor_bmp.begin(0x76)){ 
-            concatena(sensor_bmp.readAltitude(),data,3,1);
-          }else{strcat(data, ";");}
-          
-          strcat(data, ";");
-          strcat(data, ";");
+       concatena(sensor_bmp.readAltitude(),data,3,1);
+     }
+     else
+     {
+       strcat(data, ";");
+     }
+     strcat(data, ";");
+     strcat(data, ";");
   }
-
   send(data);
   strcpy(data, "");
 } 
@@ -78,14 +75,8 @@ void concatInfo(bool recebido, char data[60]){
   if (gps.location.isValid())
       {
         recebido = true;
-        
-          //concatena altitude
           concatena(gps.altitude.meters(),data,3,1);
-          
-          //concatena latitude
           concatena(gps.location.lat(),data,3,6);
-          
-          //concatena longitude
           concatena(gps.location.lng(),data,3,6);
 
           Serial.print("Latitude: ");
